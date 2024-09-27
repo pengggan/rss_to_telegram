@@ -52,21 +52,6 @@ def fetch_rss_entries(url):
     
     return entries
 
-# 多线程获取所有RSS源的内容
-def get_all_rss_entries():
-    all_entries = []
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future_to_url = {executor.submit(fetch_rss_entries, url): url for url in RSS_URLS}
-        for future in concurrent.futures.as_completed(future_to_url):
-            url = future_to_url[future]
-            try:
-                entries = future.result()
-                all_entries.extend(entries)
-            except Exception as exc:
-                print(f"{url} generated an exception: {exc}")
-        executor.shutdown(wait=True)  # 确保所有线程完成
-    return all_entries
-
 # 发送消息到Telegram
 def send_to_telegram(text):
     payload = {
@@ -88,7 +73,7 @@ if __name__ == "__main__":
         for entry in entries:
             message = f"{entry.title}\n{entry.link}"
             send_to_telegram(message)
-            time.sleep(1)  # 每发送一条消息，等待2秒，防止过快发送
+            time.sleep(0)  # 每发送一条消息，等待2秒，防止过快发送
     else:
         print("No new RSS entries found in the last 24 hours.")
     
