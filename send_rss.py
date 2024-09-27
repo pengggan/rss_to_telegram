@@ -5,7 +5,7 @@ import concurrent.futures
 import time
 import json
 
-# 直接在代码中配置RSS URL列表
+# RSS URL列表
 RSS_URLS = [
     "https://rsshub.app/zaobao/znews/china",
     "https://rsshub.app/guancha/headline",
@@ -25,7 +25,7 @@ RSS_URLS = [
     "https://hunsh.net/atom.xml"
 ]
 
-# 从环境变量中读取敏感信息
+# 环境变量
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 TELEGRAM_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -42,14 +42,20 @@ def load_sent_entries():
 
 # 保存已发送的消息
 def save_sent_entries(entries):
-    with open(SENT_ENTRIES_FILE, 'w') as f:
-        json.dump(list(entries), f)
+    try:
+        with open(SENT_ENTRIES_FILE, 'w') as f:
+            json.dump(list(entries), f)
+        print(f"Saved sent entries to {SENT_ENTRIES_FILE}.")  # 调试信息
+    except Exception as e:
+        print(f"Error saving sent entries: {e}")
 
 # 获取RSS条目
 def fetch_rss_entries(url, sent_entries):
     entries = []
+    max_attempts = 2  # 最大重试次数
+    wait_time = 100   # 每次重试之间的等待时间（秒）
 
-    for attempt in range(3):  # 增加重试机制
+    for attempt in range(max_attempts): 
         try:
             feed = feedparser.parse(url)
             if feed.bozo:
@@ -65,9 +71,9 @@ def fetch_rss_entries(url, sent_entries):
             break  # 如果成功，退出重试循环
         except Exception as e:
             print(f"Attempt {attempt + 1} failed to fetch RSS from {url}: {e}")
-            if attempt == 2:
-                print(f"Giving up on {url} after 3 attempts.")
-            time.sleep(2)  # 等待后重试
+            if attempt == max_attempts - 1:
+                print(f"Giving up on {url} after {max_attempts} attempts.")
+            time.sleep(wait_time)  # 等待后重试
     return entries
 
 # 多线程获取所有RSS源的内容
@@ -108,11 +114,10 @@ if __name__ == "__main__":
         for entry in entries:
             message = f"{entry.title}\n{entry.link}"
             send_to_telegram(message)
-            time.sleep(2)  # 每发送一条消息，等待2秒
+            time.sleep(1)  # 每发送一条消息，等待2秒
     
     # 保存已发送的消息
     save_sent_entries(sent_entries)
 
-    # 增加额外等待时间，确保所有任务完成后才退出
     print("All messages sent, waiting before exit...")
     time.sleep(30)  # 脚本结束前额外等待30秒
