@@ -2,7 +2,6 @@ import feedparser
 import requests
 import os
 import concurrent.futures
-from datetime import datetime, timedelta
 import time
 
 # 直接在代码中配置RSS URL列表
@@ -33,24 +32,44 @@ TELEGRAM_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 # 记录已发送的消息，避免重复
 sent_entries = set()
 
-# 获取过去24小时的RSS条目
+# 获取RSS条目
 def fetch_rss_entries(url):
     entries = []
-    now = datetime.now()
-    yesterday = now - timedelta(days=1)
 
-    try:
-        feed = feedparser.parse(url)
-        for entry in feed.entries:
-            entry_time = datetime(*entry.published_parsed[:6])
-            if yesterday <= entry_time <= now:
+    for attempt in range(3):  # 增加重试机制
+        try:
+            feed = feedparser.parse(url)
+            if feed.bozo:
+                print(f"Failed to parse feed from {url}: {feed.bozo_exception}")
+                return []
+
+            for entry in feed.entries:
                 if entry.link not in sent_entries:
                     entries.append(entry)
                     sent_entries.add(entry.link)
-    except Exception as e:
-        print(f"Failed to fetch RSS from {url}: {e}")
-    
+
+            print(f"Fetched {len(entries)} entries from {url}.")  # 调试信息
+            break  # 如果成功，退出重试循环
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed to fetch RSS from {url}: {e}")
+            if attempt == 2:
+                print(f"Giving up on {url} after 3 attempts.")
+            time.sleep(2)  # 等待后重试
     return entries
+
+# 多线程获取所有RSS源的内容
+def get_all_rss_entries():
+    all_entries = []
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_to_url = {executor.submit(fetch_rss_entries, url): url for url in RSS_URLS}
+        for future in concurrent.futures.as_completed(future_to_url):
+            url = future_to_url[future]
+            try:
+                entries = future.result()
+                all_entries.extend(entries)
+            except Exception as exc:
+                print(f"{url} generated an exception: {exc}")
+    return all_entries
 
 # 发送消息到Telegram
 def send_to_telegram(text):
@@ -67,16 +86,16 @@ def send_to_telegram(text):
         print(f"Error sending message: {e}")
 
 if __name__ == "__main__":
-    # 获取24小时内的RSS条目
+    # 获取所有RSS条目
     entries = get_all_rss_entries()
     if entries:
         for entry in entries:
             message = f"{entry.title}\n{entry.link}"
             send_to_telegram(message)
-            time.sleep(0)  # 每发送一条消息，等待2秒，防止过快发送
+            time.sleep(0)  # 每发送一条消息，等待2秒
     else:
-        print("No new RSS entries found in the last 24 hours.")
-    
+        print("No new RSS entries found.")
+
     # 增加额外等待时间，确保所有任务完成后才退出
     print("All messages sent, waiting before exit...")
     time.sleep(50)  # 脚本结束前额外等待30秒
