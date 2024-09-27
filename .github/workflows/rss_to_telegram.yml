@@ -4,51 +4,42 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 14 * * *'  # 每天晚上9点运行
-    
+
+name: Send RSS to Telegram
+
 jobs:
-  fetch_rss:
+  send_rss:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.x'
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
 
-      - name: Install dependencies
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        pip install requests feedparser
 
-      # 下载前一次运行的 sent_entries.json 文件
-      - name: Download sent_entries.json artifact (if exists)
-        uses: actions/download-artifact@v3
-        with:
-          name: sent-entries
-          path: ./
-        continue-on-error: true  # 如果找不到文件，不要中断工作流
+    - name: Run send_rss.py
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        CHAT_ID: ${{ secrets.CHAT_ID }}
+      run: |
+        python send_rss.py
 
-      # 解压下载的 artifact
-      - name: Unzip sent_entries.json artifact
-        run: |
-          if [ -f sent-entries.zip ]; then
-            unzip sent-entries.zip -d ./
-          fi
+    - name: Upload sent_entries.json
+      if: always()  # 确保即使失败也上传
+      uses: actions/upload-artifact@v3
+      with:
+        name: sent_entries
+        path: sent_entries.json
 
-      # 运行 RSS 抓取和消息发送脚本
-      - name: Run RSS fetch script
-        run: |
-          source venv/bin/activate
-          python send_rss.py
-
-      # 上传更新后的 sent_entries.json 文件
-      - name: Upload sent_entries.json artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: sent-entries
-          path: sent_entries.json
-
-
+    - name: Download sent_entries.json
+      if: always()  # 确保即使失败也下载
+      uses: actions/download-artifact@v3
+      with:
+        name: sent_entries
