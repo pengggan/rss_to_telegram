@@ -1,8 +1,9 @@
 import feedparser
 import requests
 import os
-import time
+import concurrent.futures
 from datetime import datetime, timedelta
+import time
 
 # 直接在代码中配置RSS URL列表
 RSS_URLS = [
@@ -33,12 +34,12 @@ TELEGRAM_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 sent_entries = set()
 
 # 获取过去24小时的RSS条目
-def get_rss_entries():
+def fetch_rss_entries(url):
     entries = []
     now = datetime.now()
     yesterday = now - timedelta(days=1)
-    
-    for url in RSS_URLS:
+
+    try:
         feed = feedparser.parse(url)
         for entry in feed.entries:
             entry_time = datetime(*entry.published_parsed[:6])
@@ -46,7 +47,25 @@ def get_rss_entries():
                 if entry.link not in sent_entries:
                     entries.append(entry)
                     sent_entries.add(entry.link)
+    except Exception as e:
+        print(f"Failed to fetch RSS from {url}: {e}")
+    
     return entries
+
+# 多线程获取所有RSS源的内容
+def get_all_rss_entries():
+    all_entries = []
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_to_url = {executor.submit(fetch_rss_entries, url): url for url in RSS_URLS}
+        for future in concurrent.futures.as_completed(future_to_url):
+            url = future_to_url[future]
+            try:
+                entries = future.result()
+                all_entries.extend(entries)
+            except Exception as exc:
+                print(f"{url} generated an exception: {exc}")
+        executor.shutdown(wait=True)  # 确保所有线程完成
+    return all_entries
 
 # 发送消息到Telegram
 def send_to_telegram(text):
@@ -55,21 +74,24 @@ def send_to_telegram(text):
         'text': text,
         'disable_web_page_preview': True
     }
-    requests.post(TELEGRAM_URL, data=payload)
-
-# 分批发送，避免一次性大量发送
-def send_in_batches(entries, batch_size=5, delay=5):
-    for i in range(0, len(entries), batch_size):
-        batch = entries[i:i + batch_size]
-        for entry in batch:
-            message = f"{entry.title}\n{entry.link}"
-            send_to_telegram(message)
-        time.sleep(delay)  # 延迟，避免一次性发送太多
+    try:
+        response = requests.post(TELEGRAM_URL, data=payload)
+        if response.status_code != 200:
+            print(f"Failed to send message: {response.text}")
+    except Exception as e:
+        print(f"Error sending message: {e}")
 
 if __name__ == "__main__":
     # 获取24小时内的RSS条目
-    entries = get_rss_entries()
+    entries = get_all_rss_entries()
     if entries:
-        send_in_batches(entries)
+        for entry in entries:
+            message = f"{entry.title}\n{entry.link}"
+            send_to_telegram(message)
+            time.sleep(1)  # 每发送一条消息，等待2秒，防止过快发送
     else:
         print("No new RSS entries found in the last 24 hours.")
+    
+    # 增加额外等待时间，确保所有任务完成后才退出
+    print("All messages sent, waiting before exit...")
+    time.sleep(50)  # 脚本结束前额外等待30秒
