@@ -3,24 +3,25 @@ import requests
 import os
 import concurrent.futures
 import time
-from html import escape
+import json
 
 # 直接在代码中配置RSS URL列表
 RSS_URLS = [
     "https://rsshub.app/zaobao/znews/china",
     "https://rsshub.app/guancha/headline",
+    "https://rsshub.app/youtube/playlist/PLRQMDFCUMjJW_R29PyDKbILE2Nj6mC3X3",
     "https://blog.090227.xyz/atom.xml",
+    "https://rsshub.app/youtube/playlist/PLvrTMNP6Iw6oTPlmRHvjAWiCeQpwHK6yG",
     "https://www.freedidi.com/feed",
     "https://www.digihubs.xyz/feeds/posts/default?alt=rss",
     "https://p3terx.com/feed",
-    "https://rsshub.app/fortunechina",
     "https://www.youtube.com/@bulianglin/videos",
     "https://www.youtube.com/@IamJackLiu/videos",
+    "https://rsshub.app/fortunechina",
     "https://www.youtube.com/@%E4%B8%AD%E6%8C%87%E9%80%9A/videos",
     "https://www.youtube.com/@TchLiyongle/videos",
-    "https://rsshub.app/youtube/playlist/PLRQMDFCUMjJW_R29PyDKbILE2Nj6mC3X3",
-    "https://rsshub.app/youtube/playlist/PLvrTMNP6Iw6oTPlmRHvjAWiCeQpwHK6yG",
     "https://sspai.com/feed",
+    "https://www.112114.xyz/rss",
     "https://hunsh.net/atom.xml"
 ]
 
@@ -29,11 +30,23 @@ TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 TELEGRAM_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
-# 记录已发送的消息，避免重复
-sent_entries = set()
+# 记录文件
+SENT_ENTRIES_FILE = 'sent_entries.json'
+
+# 读取已发送的消息
+def load_sent_entries():
+    if os.path.exists(SENT_ENTRIES_FILE):
+        with open(SENT_ENTRIES_FILE, 'r') as f:
+            return set(json.load(f))
+    return set()
+
+# 保存已发送的消息
+def save_sent_entries(entries):
+    with open(SENT_ENTRIES_FILE, 'w') as f:
+        json.dump(list(entries), f)
 
 # 获取RSS条目
-def fetch_rss_entries(url):
+def fetch_rss_entries(url, sent_entries):
     entries = []
 
     for attempt in range(3):  # 增加重试机制
@@ -58,10 +71,10 @@ def fetch_rss_entries(url):
     return entries
 
 # 多线程获取所有RSS源的内容
-def get_all_rss_entries():
+def get_all_rss_entries(sent_entries):
     all_entries = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        future_to_url = {executor.submit(fetch_rss_entries, url): url for url in RSS_URLS}
+        future_to_url = {executor.submit(fetch_rss_entries, url, sent_entries): url for url in RSS_URLS}
         for future in concurrent.futures.as_completed(future_to_url):
             url = future_to_url[future]
             try:
@@ -86,16 +99,20 @@ def send_to_telegram(text):
         print(f"Error sending message: {e}")
 
 if __name__ == "__main__":
+    # 加载已发送的消息
+    sent_entries = load_sent_entries()
+    
     # 获取所有RSS条目
-    entries = get_all_rss_entries()
+    entries = get_all_rss_entries(sent_entries)
     if entries:
         for entry in entries:
-            message = f"{escape(entry.title)}\n{escape(entry.link)}"  # 确保标题和链接转义
+            message = f"{entry.title}\n{entry.link}"
             send_to_telegram(message)
-            time.sleep(0)  # 每发送一条消息，等待2秒
-    else:
-        print("No new RSS entries found.")
+            time.sleep(2)  # 每发送一条消息，等待2秒
+    
+    # 保存已发送的消息
+    save_sent_entries(sent_entries)
 
     # 增加额外等待时间，确保所有任务完成后才退出
     print("All messages sent, waiting before exit...")
-    time.sleep(50)  # 脚本结束前额外等待30秒
+    time.sleep(30)  # 脚本结束前额外等待30秒
