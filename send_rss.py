@@ -124,4 +124,4 @@ if __name__ == "__main__":
     save_sent_entries(sent_entries)
 
     print("All messages sent, waiting before exit...")
-    time.sleep(3)  # 脚本结束前额外等待30秒
+    time.sleep(5)  # 脚本结束前额外等待30秒
