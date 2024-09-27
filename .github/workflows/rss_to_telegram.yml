@@ -3,7 +3,7 @@ name: RSS to Telegram
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 21 * * *'  # 每天晚上9点运行
+    - cron: '0 14 * * *'  # 每天晚上9点运行
 
 jobs:
   send_rss:

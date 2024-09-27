@@ -21,7 +21,6 @@ RSS_URLS = [
     "https://www.youtube.com/@%E4%B8%AD%E6%8C%87%E9%80%9A/videos",
     "https://www.youtube.com/@TchLiyongle/videos",
     "https://sspai.com/feed",
-    "https://www.112114.xyz/rss",
     "https://hunsh.net/atom.xml"
 ]
 
