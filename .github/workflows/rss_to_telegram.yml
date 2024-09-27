@@ -1,8 +1,8 @@
 name: RSS to Telegram
 
 on:
-  schedule:
   workflow_dispatch:
+  schedule:
     - cron: '0 21 * * *'  # 每天晚上9点运行
 
 jobs:
@@ -10,24 +10,63 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
 
-    - name: Run the RSS script
-      run: |
-        source venv/bin/activate
-        python send_rss.py
-      env:
-        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      # 下载前一次运行的 sent_entries.json 文件
+      - name: Download sent_entries.json artifact (if exists)
+        uses: actions/download-artifact@v2
+        with:
+          name: sent-entries
+          path: ./
+        continue-on-error: true  # 如果找不到文件，不要中断工作流
+
+      # 读取 sent_entries.json 文件内容
+      - name: Read sent_entries.json
+        id: read_json
+        run: |
+          if [ -f sent_entries.json ]; then
+            entries=$(jq '.entries' sent_entries.json)  # 根据实际结构修改
+            echo "Entries: $entries"
+            echo "::set-output name=entries::$entries"  # 将读取的内容设置为输出变量
+          else
+            echo "sent_entries.json not found."
+            echo "::set-output name=entries::[]"  # 如果文件不存在，返回空数组
+
+      # 运行 RSS 脚本
+      - name: Run the RSS script
+        run: |
+          source venv/bin/activate
+          python send_rss.py
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      # 上传更新后的 sent_entries.json 文件
+      - name: Upload sent_entries.json artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: sent-entries
+          path: sent_entries.json
+
+      # 自动提交 sent_entries.json 文件到 GitHub
+      - name: Commit and Push sent_entries.json
+        run: |
+          git config --local user.name "GitHub Actions"
+          git config --local user.email "actions@github.com"
+          git add sent_entries.json
+          git commit -m "Update sent_entries.json with latest sent entries" || echo "No changes to commit"
+          git push origin main  # 确保推送到正确的分支
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用自动生成的 GitHub Token
