@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 14 * * *'  # 每天晚上9点运行
-
+    
 jobs:
   fetch_rss:
     runs-on: ubuntu-latest
@@ -23,19 +23,17 @@ jobs:
           source venv/bin/activate
           pip install -r requirements.txt
 
-      # 自动下载上次的 sent_entries.json 文件
-      - name: Download sent_entries.json artifact
+      - name: Download sent_entries.json artifact (if exists)
         uses: actions/download-artifact@v3
         with:
           name: sent-entries
-          path: ./  # 下载到当前工作目录
+          path: ./
 
       - name: Run RSS fetch script
         run: |
           source venv/bin/activate
           python send_rss.py
 
-      # 自动上传 sent_entries.json 文件
       - name: Upload sent_entries.json artifact
         uses: actions/upload-artifact@v3
         with:
