@@ -5,8 +5,6 @@ on:
   schedule:
     - cron: '0 14 * * *'  # 每天晚上9点运行
 
-name: Send RSS to Telegram
-
 jobs:
   send_rss:
     runs-on: ubuntu-latest
