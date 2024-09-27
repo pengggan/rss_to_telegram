@@ -5,11 +5,6 @@ import concurrent.futures
 import time
 import json
 
-# 检查 sent_entries.json 是否存在，不存在则创建
-if not os.path.exists('sent_entries.json'):
-    with open('sent_entries.json', 'w') as f:
-        json.dump([], f)  # 创建一个空列表的 JSON 文件
-
 # RSS URL列表
 RSS_URLS = [
     "https://rsshub.app/zaobao/znews/china",
@@ -32,8 +27,13 @@ RSS_URLS = [
 # 环境变量
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-TELEGRAM_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"s
+TELEGRAM_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
+# 检查是否存在 sent_entries.json 文件，不存在则创建
+if not os.path.exists('sent_entries.json'):
+    with open('sent_entries.json', 'w') as f:
+        json.dump([], f)  # 创建一个空的 JSON 文件（列表）
+        
 # 记录文件
 SENT_ENTRIES_FILE = 'sent_entries.json'
 
