@@ -1,9 +1,9 @@
 name: RSS to Telegram
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 14 * * *'  # 每天晚上9点运行
+  workflow_dispatch:
+    - cron: '0 21 * * *'  # 每天晚上9点运行
 
 jobs:
   send_rss:
@@ -20,24 +20,14 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install requests feedparser
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
 
-    - name: Run send_rss.py
+    - name: Run the RSS script
+      run: |
+        source venv/bin/activate
+        python send_rss.py
       env:
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-        CHAT_ID: ${{ secrets.CHAT_ID }}
-      run: |
-        python send_rss.py
-
-    - name: Upload sent_entries.json
-      if: always()  # 确保即使失败也上传
-      uses: actions/upload-artifact@v3
-      with:
-        name: sent_entries
-        path: sent_entries.json
-
-    - name: Download sent_entries.json
-      if: always()  # 确保即使失败也下载
-      uses: actions/download-artifact@v3
-      with:
-        name: sent_entries
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
