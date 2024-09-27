@@ -3,25 +3,26 @@ import requests
 import os
 import concurrent.futures
 import time
+from html import escape
 
 # 直接在代码中配置RSS URL列表
 RSS_URLS = [
-    "https://rsshub.app/guancha/headline",
     "https://rsshub.app/zaobao/znews/china",
-    "https://www.freedidi.com/feed",
-    "https://p3terx.com/feed",
-    "https://sspai.com/feed",
-    "https://www.digihubs.xyz/feeds/posts/default?alt=rss",
-    "https://blog.090227.xyz/atom.xml",
-    "https://hunsh.net/atom.xml",
-    "https://www.112114.xyz/rss",
+    "https://rsshub.app/guancha/headline",
     "https://rsshub.app/youtube/playlist/PLRQMDFCUMjJW_R29PyDKbILE2Nj6mC3X3",
+    "https://blog.090227.xyz/atom.xml",
     "https://rsshub.app/youtube/playlist/PLvrTMNP6Iw6oTPlmRHvjAWiCeQpwHK6yG",
+    "https://www.freedidi.com/feed",
+    "https://www.digihubs.xyz/feeds/posts/default?alt=rss",
+    "https://p3terx.com/feed",
     "https://www.youtube.com/@bulianglin/videos",
     "https://www.youtube.com/@IamJackLiu/videos",
-    "https://www.youtube.com/@TchLiyongle/videos",
+    "https://rsshub.app/fortunechina",
     "https://www.youtube.com/@%E4%B8%AD%E6%8C%87%E9%80%9A/videos",
-    "https://rsshub.app/fortunechina"
+    "https://www.youtube.com/@TchLiyongle/videos",
+    "https://sspai.com/feed",
+    "https://www.112114.xyz/rss",
+    "https://hunsh.net/atom.xml"
 ]
 
 # 从环境变量中读取敏感信息
@@ -90,7 +91,7 @@ if __name__ == "__main__":
     entries = get_all_rss_entries()
     if entries:
         for entry in entries:
-            message = f"{entry.title}\n{entry.link}"
+            message = f"{escape(entry.title)}\n{escape(entry.link)}"  # 确保标题和链接转义
             send_to_telegram(message)
             time.sleep(0)  # 每发送一条消息，等待2秒
     else:
