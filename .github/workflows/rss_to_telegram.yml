@@ -39,4 +39,4 @@ jobs:
           git add sent_entries.json
           git commit -m 'Update sent entries'
           git push
-          continue-on-error: true  # 忽略当没有新变化时的错误
+        continue-on-error: true  # 忽略当没有新变化时的错误
