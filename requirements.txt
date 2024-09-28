@@ -1,8 +1,0 @@
-requests
-aiofiles
-pyppeteer
-feedparser
-python-telegram-bot
-psutil
-aiohttp
-asyncio
