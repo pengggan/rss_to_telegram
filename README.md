@@ -14,5 +14,23 @@ RSS_FEEDS = [
     'https://www.youtube.com/@TchLiyongle/videos',
     'https://www.youtube.com/@%E4%B8%AD%E6%8C%87%E9%80%9A/videos',
     'https://rsshub.app/fortunechina',
+    'http://blog.caixin.com/feed',    
+    'http://news.stockstar.com/rss/xml.aspx?file=xml/stock/2.xml',
+    'https://36kr.com/feed',
+    'https://www.huxiu.com/rss/0.xml',
+    'https://www.chinanews.com.cn/rss/finance.xml',
+    'http://cn.reuters.com/rssfeed/cnintlbiznews,
+    'https://xueqiu.com/hots/topic/rss',
+    'https://qks.sufe.edu.cn/J/CJYJ/RSS/CN',
+    'https://www.economist.com/sections/china/rss.xml,
+    'https://rsshub.app/youtube/playlist/PLRQMDFCUMjJW_R29PyDKbILE2Nj6mC3X3',
+    'https://rsshub.app/youtube/playlist/PLvrTMNP6Iw6oTPlmRHvjAWiCeQpwHK6yG',
+    'https://www.youtube.com/@bulianglin/videos',
+    'https://www.youtube.com/@IamJackLiu/videos',
+    'https://www.youtube.com/@TchLiyongle/videos',
+    'https://www.youtube.com/@%E4%B8%AD%E6%8C%87%E9%80%9A/videos',
+
     # 添加更多 RSS 源
 ]
+
+
