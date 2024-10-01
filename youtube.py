@@ -2,44 +2,20 @@ import os
 import json
 import requests
 from feedparser import parse
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
 RSS_FEEDS = [
-    'https://rsshub.app/guancha/headline',
-    'https://rsshub.app/zaobao/znews/china',
-    'https://www.freedidi.com/feed',
-    'https://p3terx.com/feed',
-    'https://sspai.com/feed',
-    'https://www.digihubs.xyz/feeds/posts/default?alt=rss',
-    'https://blog.090227.xyz/atom.xml',
-    'https://hunsh.net/atom.xml',
-    'https://rsshub.app/youtube/playlist/PLRQMDFCUMjJW_R29PyDKbILE2Nj6mC3X3',
-    'https://rsshub.app/youtube/playlist/PLvrTMNP6Iw6oTPlmRHvjAWiCeQpwHK6yG',
     'https://www.youtube.com/@bulianglin/videos',
     'https://www.youtube.com/@IamJackLiu/videos',
     'https://www.youtube.com/@TchLiyongle/videos',
     'https://www.youtube.com/@%E4%B8%AD%E6%8C%87%E9%80%9A/videos',
-    'https://rsshub.app/fortunechina',
-    'http://blog.caixin.com/feed',    
-    'http://news.stockstar.com/rss/xml.aspx?file=xml/stock/2.xml',
-    'https://36kr.com/feed',
-    'https://www.huxiu.com/rss/0.xml',
-    'https://www.chinanews.com.cn/rss/finance.xml',
-    'http://cn.reuters.com/rssfeed/cnintlbiznews',
-    'https://xueqiu.com/hots/topic/rss',
-    'https://qks.sufe.edu.cn/J/CJYJ/RSS/CN',
-    'https://www.economist.com/sections/china/rss.xml',
     'https://rsshub.app/youtube/playlist/PLRQMDFCUMjJW_R29PyDKbILE2Nj6mC3X3',
     'https://rsshub.app/youtube/playlist/PLvrTMNP6Iw6oTPlmRHvjAWiCeQpwHK6yG',
-    'https://www.youtube.com/@bulianglin/videos',
-    'https://www.youtube.com/@IamJackLiu/videos',
-    'https://www.youtube.com/@TchLiyongle/videos',
-    'https://www.youtube.com/@%E4%B8%AD%E6%8C%87%E9%80%9A/videos',
     # 添加更多 RSS 源
 ]
 
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/sendMessage"
+TELEGRAM_API_URL = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_YOUTUBE']}/sendMessage"
 
 def load_sent_entries():
     try:
@@ -60,8 +36,20 @@ def send_message(chat_id, text):
     }
     requests.post(TELEGRAM_API_URL, json=payload)
 
+def fetch_feed(feed):
+    try:
+        response = requests.get(feed, timeout=59)  # 增加超时时间
+        response.raise_for_status()  # 检查请求是否成功
+        return parse(response.content)  # 返回解析的内容
+    except Exception as e:
+        print(f"Error fetching {feed}: {e}")
+        return None
+
 def process_feed(feed, sent_entries, chat_id):
-    feed_data = parse(feed)
+    feed_data = fetch_feed(feed)
+    if feed_data is None:
+        return []
+
     new_entries = []
     for entry in feed_data.entries:
         if entry.link not in sent_entries:
@@ -76,9 +64,9 @@ def main():
     new_entries = []
 
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(process_feed, feed, sent_entries, os.environ['TELEGRAM_CHAT_ID']) for feed in RSS_FEEDS]
-        for future in futures:
-            new_entries.extend(future.result())
+        futures = {executor.submit(process_feed, feed, sent_entries, os.environ['TELEGRAM_CHAT_ID']): feed for feed in RSS_FEEDS}
+        for future in as_completed(futures):
+            new_entries.extend(future.result() or [])
 
     sent_entries.extend(new_entries)
     save_sent_entries(sent_entries)
