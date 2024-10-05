@@ -20,9 +20,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt  # 从 requirements.txt 安装依赖
+          pip install -r requirements.txt
 
-      # 并行运行两个脚本，确保工作流继续进行
+      # 并行运行两个脚本
       - name: Run both scripts in parallel
         env:
           TELEGRAM_BOT_TOKEN_RSS: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -31,7 +31,7 @@ jobs:
         run: |
           python send_rss.py || echo "send_rss.py failed" &
           python youtube_rss.py || echo "youtube_rss.py failed" &
-          wait  # 等待两个脚本执行完毕
+          wait
 
       - name: Commit sent_entries.json
         run: |

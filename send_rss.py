@@ -5,37 +5,41 @@ from feedparser import parse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
+# RSS 源列表
 RSS_FEEDS = [
-   # 'https://36kr.com/feed',
-   # 'https://rsshub.app/guancha/headline',
+    # 'https://36kr.com/feed',
+    # 'https://rsshub.app/guancha/headline',
     'https://rsshub.app/zaobao/znews/china',
     'https://rsshub.app/fortunechina',
     'https://www.freedidi.com/feed',
-   # 'https://p3terx.com/feed',
-   # 'https://sspai.com/feed',
-   # 'https://www.digihubs.xyz/feeds/posts/default?alt=rss',
+    # 'https://p3terx.com/feed',
+    # 'https://sspai.com/feed',
+    # 'https://www.digihubs.xyz/feeds/posts/default?alt=rss',
     'https://blog.090227.xyz/atom.xml',
-   # 'https://hunsh.net/atom.xml',
-    'http://blog.caixin.com/feed',    
-   # 'http://news.stockstar.com/rss/xml.aspx?file=xml/stock/2.xml',
-   # 'http://cn.reuters.com/rssfeed/cnintlbiznews',
-   # 'https://qks.sufe.edu.cn/J/CJYJ/RSS/CN',
-   # 'https://www.economist.com/sections/china/rss.xml',
+    # 'https://hunsh.net/atom.xml',
+    'http://blog.caixin.com/feed',
+    # 'http://news.stockstar.com/rss/xml.aspx?file=xml/stock/2.xml',
+    # 'http://cn.reuters.com/rssfeed/cnintlbiznews',
+    # 'https://qks.sufe.edu.cn/J/CJYJ/RSS/CN',
+    # 'https://www.economist.com/sections/china/rss.xml',
     # 添加更多 RSS 源
 ]
 
+# Telegram API URL
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN_RSS']}/sendMessage"
 
 def load_sent_entries():
     try:
+        # 使用相对路径加载已发送条目
         with open('sent_entries.json', 'r') as f:
-            return json.load(f)
+            return set(json.load(f))  # 使用集合存储已发送条目
     except FileNotFoundError:
-        return []
+        return set()
 
 def save_sent_entries(entries):
+    # 使用相对路径保存已发送条目
     with open('sent_entries.json', 'w') as f:
-        json.dump(entries, f)
+        json.dump(list(entries), f)  # 保存为列表格式
 
 def send_message(chat_id, text):
     payload = {
@@ -44,7 +48,9 @@ def send_message(chat_id, text):
         'parse_mode': 'Markdown'
     }
     try:
-        requests.post(TELEGRAM_API_URL, json=payload)
+        response = requests.post(TELEGRAM_API_URL, json=payload)
+        response.raise_for_status()  # 检查请求是否成功
+        print(f"Message sent: {text}")  # 日志记录
     except Exception as e:
         print(f"Error sending message: {e}")
 
@@ -68,6 +74,7 @@ def process_feed(feed, sent_entries, chat_id):
             message = f"*{entry.title}*\n{entry.link}"
             send_message(chat_id, message)
             new_entries.append(entry.link)
+            sent_entries.add(entry.link)  # 立即更新 sent_entries
             time.sleep(3)  # 处理每个条目的额外延迟
     return new_entries
 
@@ -81,7 +88,6 @@ def main():
         for future in as_completed(futures):
             new_entries.extend(future.result() or [])
 
-    sent_entries.extend(new_entries)
     save_sent_entries(sent_entries)
 
 if __name__ == "__main__":
