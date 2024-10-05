@@ -27,13 +27,13 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_YOUTU
 
 def load_sent_entries():
     try:
-        with open('sent_entries.json', 'r') as f:
+        with open('youtube_rss.json', 'r') as f:
             return json.load(f)
     except FileNotFoundError:
         return []
 
 def save_sent_entries(entries):
-    with open('sent_entries.json', 'w') as f:
+    with open('youtube_rss.json', 'w') as f:
         json.dump(entries, f)
 
 def send_message(chat_id, text):
