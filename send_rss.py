@@ -24,7 +24,7 @@ RSS_FEEDS = [
     # 添加更多 RSS 源
 ]
 
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/sendMessage"
+TELEGRAM_API_URL = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN_RSS']}/sendMessage"
 
 def load_sent_entries():
     try:
@@ -50,7 +50,7 @@ def send_message(chat_id, text):
 
 def fetch_feed(feed):
     try:
-        response = requests.get(feed, timeout=59)
+        response = requests.get(feed, timeout=119)
         response.raise_for_status()
         return parse(response.content)
     except Exception as e:

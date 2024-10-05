@@ -49,7 +49,7 @@ def send_message(chat_id, text):
 
 def fetch_feed(feed):
     try:
-        response = requests.get(feed, timeout=118)
+        response = requests.get(feed, timeout=59)
         response.raise_for_status()
         return parse(response.content)
     except Exception as e:
