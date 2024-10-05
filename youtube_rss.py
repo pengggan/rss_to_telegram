@@ -6,25 +6,24 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
 RSS_FEEDS = [
-   # 'https://36kr.com/feed',
-   # 'https://rsshub.app/guancha/headline',
-    'https://rsshub.app/zaobao/znews/china',
-    'https://rsshub.app/fortunechina',
-    'https://www.freedidi.com/feed',
-   # 'https://p3terx.com/feed',
-   # 'https://sspai.com/feed',
-   # 'https://www.digihubs.xyz/feeds/posts/default?alt=rss',
-    'https://blog.090227.xyz/atom.xml',
-   # 'https://hunsh.net/atom.xml',
-    'http://blog.caixin.com/feed',    
-   # 'http://news.stockstar.com/rss/xml.aspx?file=xml/stock/2.xml',
-   # 'http://cn.reuters.com/rssfeed/cnintlbiznews',
-   # 'https://qks.sufe.edu.cn/J/CJYJ/RSS/CN',
-   # 'https://www.economist.com/sections/china/rss.xml',
-    # 添加更多 RSS 源
+    'https://rsshub.app/youtube/playlist/PLvHT0yeWYIuASUZjoW8OXe4e_UkgP7qDU',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCUNciDq-y6I6lEQPeoP-R5A',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCMtXiCoKFrc2ovAGc1eywDg',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCNiJNzSkfumLB7bYtXcIEmg',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCii04BCvYIdQvshrdNDAcww',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCJMEiNh1HvpopPU3n9vJsMQ',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCYjB6uufPeHSwuHs8wovLjg',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCSs4A6HYKmHA2MG_0z-F0xw',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCZDgXi7VpKhBJxsPuZcBpgA',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCSYBgX9pWGiUAcBxjnj6JCQ',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCbCCUH8S3yhlm7__rhxR2QQ',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCXkOTZJ743JgVhJWmNV8F3Q',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UC000Jn3HGeQSwBuX_cLDK8Q',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCG_gH6S-2ZUOtEw27uIS_QA',
+    'https://www.youtube.com/feeds/videos.xml?channel_id=UCJ5rBA0z4WFGtUTS83sAb_A',
 ]
 
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN']}/sendMessage"
+TELEGRAM_API_URL = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_YOUTUBE']}/sendMessage"
 
 def load_sent_entries():
     try:
