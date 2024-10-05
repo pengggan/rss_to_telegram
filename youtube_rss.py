@@ -23,7 +23,7 @@ RSS_FEEDS = [
     'https://www.youtube.com/feeds/videos.xml?channel_id=UCJ5rBA0z4WFGtUTS83sAb_A',
 ]
 
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_YOUTUBE']}/sendMessage"
+TELEGRAM_API_URL = f"https://api.telegram.org/bot{os.environ['TELEGRAM_BOT_TOKEN_YOUTUBE']}/sendMessage"
 
 def load_sent_entries():
     try:

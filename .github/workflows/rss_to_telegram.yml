@@ -45,7 +45,7 @@ jobs:
       - name: Run youtube_rss.py with error handling
         continue-on-error: true
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_YOUTUBE }}
+          TELEGRAM_BOT_TOKEN_YOUTUBE: ${{ secrets.TELEGRAM_BOT_YOUTUBE }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python youtube_rss.py
