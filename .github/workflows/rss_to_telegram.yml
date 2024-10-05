@@ -33,24 +33,28 @@ jobs:
           python youtube_rss.py || echo "youtube_rss.py failed" &
           wait
 
+      # 提交 sent_entries.json
       - name: Commit sent_entries.json
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'action@github.com'
-          git add sent_entries.json
-          if ! git diff --cached --quiet; then
-            git commit -m 'Update sent_entries'
-            git push
-          else
-            echo "No changes to commit"
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add sent_entries.json  # 暂存更改
+          git commit -m "Update sent_entries.json with new sent emails" || echo "No changes to commit"
+          git stash  # 存储未提交的更改
+          git pull --rebase origin main  # 拉取远程更改并进行 rebase
+          git stash pop  # 恢复之前存储的更改
+          git push
+        continue-on-error: true  # 允许此步骤出错
 
+      # 提交 youtube_rss.json
       - name: Commit youtube_rss.json
         run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'action@github.com'
-          git add youtube_rss.json
-          if ! git diff --cached --quiet; then
-            git commit -m 'Update youtube_rss'
-            git push
-          else
-            echo "No changes to commit"
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add youtube_rss.json  # 暂存更改
+          git commit -m "Update youtube_rss.json with new sent emails" || echo "No changes to commit"
+          git stash  # 存储未提交的更改
+          git pull --rebase origin main  # 拉取远程更改并进行 rebase
+          git stash pop  # 恢复之前存储的更改
+          git push
+        continue-on-error: true  # 允许此步骤出错
