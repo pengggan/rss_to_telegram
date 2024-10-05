@@ -15,33 +15,47 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'  # 或者你需要的其他版本
+          python-version: '3.8'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt  # 从 requirements.txt 安装依赖
 
-      - name: Run send_rss.py
+      # 同时运行两个脚本
+      - name: Run both scripts in parallel
+        env:
+          TELEGRAM_BOT_TOKEN_RSS: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN_YOUTUBE: ${{ secrets.TELEGRAM_BOT_YOUTUBE }}
+        run: |
+          python send_rss.py &  # 并行运行
+          python youtube_rss.py &  # 并行运行
+          wait  # 等待两个脚本执行完毕
+
+      # 即使有一个脚本出错，工作流仍然继续
+      - name: Run send_rss.py with error handling
+        continue-on-error: true
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python send_rss.py
 
-      - name: Run youtube_rss.py
+      - name: Run youtube_rss.py with error handling
+        continue-on-error: true
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_YOUTUBE }}  # 可根据需要定义不同的变量
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_YOUTUBE }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python youtube_rss.py
-          
+
       - name: Commit sent_entries.json
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'action@github.com'
           git add sent_entries.json
-          if ! git diff --cached --quiet; then  # 检查是否有变化
+          if ! git diff --cached --quiet; then
             git commit -m 'Update sent_entries'
             git push
           else
@@ -52,9 +66,8 @@ jobs:
           git config --global user.name 'github-actions'
           git config --global user.email 'action@github.com'
           git add youtube_rss.json
-          if ! git diff --cached --quiet; then  # 检查是否有变化
+          if ! git diff --cached --quiet; then
             git commit -m 'Update youtube_rss'
             git push
           else
             echo "No changes to commit"
-
