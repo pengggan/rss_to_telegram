@@ -22,33 +22,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt  # 从 requirements.txt 安装依赖
 
-      # 同时运行两个脚本
+      # 并行运行两个脚本，确保工作流继续进行
       - name: Run both scripts in parallel
         env:
           TELEGRAM_BOT_TOKEN_RSS: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_BOT_TOKEN_YOUTUBE: ${{ secrets.TELEGRAM_BOT_YOUTUBE }}
         run: |
-          python send_rss.py &  # 并行运行
-          python youtube_rss.py &  # 并行运行
+          python send_rss.py || echo "send_rss.py failed" &
+          python youtube_rss.py || echo "youtube_rss.py failed" &
           wait  # 等待两个脚本执行完毕
-
-      # 即使有一个脚本出错，工作流仍然继续
-      - name: Run send_rss.py with error handling
-        continue-on-error: true
-        env:
-          TELEGRAM_BOT_TOKEN_RSS: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          python send_rss.py
-
-      - name: Run youtube_rss.py with error handling
-        continue-on-error: true
-        env:
-          TELEGRAM_BOT_TOKEN_YOUTUBE: ${{ secrets.TELEGRAM_BOT_YOUTUBE }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          python youtube_rss.py
 
       - name: Commit sent_entries.json
         run: |
