@@ -23,6 +23,7 @@ RSS_FEEDS = [
    # 'https://blog.090227.xyz/atom.xml',
     # 'https://hunsh.net/atom.xml',
     'http://blog.caixin.com/feed',
+    'https://www.freedidi.com/feed',
     'http://news.stockstar.com/rss/xml.aspx?file=xml/stock/2.xml',
     'http://cn.reuters.com/rssfeed/cnintlbiznews',
     # 'https://qks.sufe.edu.cn/J/CJYJ/RSS/CN',
